@@ -1,35 +1,22 @@
 variable "openstack_auth_url" {
   description = "Leaf Cloud OpenStack auth URL"
-  default     = "https://create.leaf.cloud:5000/v3"
+  default     = "https://create.leaf.cloud:5000"
 }
 
 variable "openstack_region" {
   description = "Leaf Cloud region"
-  default     = "RegionOne"
+  default     = "europe-nl"
 }
 
-variable "openstack_project_name" {
-  description = "Your Leaf Cloud project name"
+variable "application_credential_id" {
+  description = "Leaf Cloud application credential ID"
   type        = string
 }
 
-variable "openstack_user_name" {
-  description = "Your Leaf Cloud username"
-  type        = string
-}
-
-variable "openstack_password" {
-  description = "Your Leaf Cloud password"
+variable "application_credential_secret" {
+  description = "Leaf Cloud application credential secret"
   type        = string
   sensitive   = true
-}
-
-variable "openstack_user_domain" {
-  default = "Default"
-}
-
-variable "openstack_project_domain" {
-  default = "Default"
 }
 
 variable "vm_flavor" {
@@ -39,7 +26,7 @@ variable "vm_flavor" {
 
 variable "vm_image" {
   description = "Ubuntu image name"
-  default     = "Ubuntu 22.04 LTS"
+  default     = "Ubuntu-22.04"
 }
 
 variable "ssh_key_name" {

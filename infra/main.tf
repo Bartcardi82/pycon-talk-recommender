@@ -8,13 +8,10 @@ terraform {
 }
 
 provider "openstack" {
-  auth_url    = var.openstack_auth_url
-  region      = var.openstack_region
-  user_name   = var.openstack_user_name
-  password    = var.openstack_password
-  tenant_name = var.openstack_project_name
-  user_domain_name    = var.openstack_user_domain
-  project_domain_name = var.openstack_project_domain
+  auth_url                      = var.openstack_auth_url
+  region                        = var.openstack_region
+  application_credential_id     = var.application_credential_id
+  application_credential_secret = var.application_credential_secret
 }
 
 resource "openstack_networking_secgroup_v2" "vllm" {
@@ -68,9 +65,9 @@ resource "openstack_networking_floatingip_v2" "vllm" {
   pool = "external"
 }
 
-resource "openstack_compute_floatingip_associate_v2" "vllm" {
+resource "openstack_networking_floatingip_associate_v2" "vllm" {
   floating_ip = openstack_networking_floatingip_v2.vllm.address
-  instance_id = openstack_compute_instance_v2.vllm.id
+  port_id     = openstack_compute_instance_v2.vllm.network[0].port
 }
 
 output "vm_ip" {
