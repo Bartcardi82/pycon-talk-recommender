@@ -1,0 +1,24 @@
+[project]
+name = "pycon-agent"
+version = "0.1.0"
+description = "PyCon DE 2026 Talk Recommender — SLM-powered agent with tool calling"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=0.3",
+    "langchain-openai>=0.3",
+    "langgraph>=0.3",
+    "openai>=1.60",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pycon_agent"]
