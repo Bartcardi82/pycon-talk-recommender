@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "PyCon DE 2026 Talk Recommender — SLM-powered agent with tool calling"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
     "langchain>=0.3",
     "langchain-openai>=0.3",
     "langgraph>=0.3",

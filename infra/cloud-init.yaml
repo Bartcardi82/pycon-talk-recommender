@@ -11,13 +11,15 @@ packages:
   - apt-transport-https
 
 write_files:
-  - path: /etc/caddy/Caddyfile
+  - path: /opt/vllm/setup-caddy.sh
+    permissions: "0755"
     content: |
-      {
-        auto_https off
-      }
-
-      :443 {
+      #!/bin/bash
+      # Generate Caddyfile using the VM's own IP address for TLS cert
+      MY_IP=$(hostname -I | awk '{print $1}')
+      cat > /etc/caddy/Caddyfile <<EOF
+      $${MY_IP}:443 {
+        tls internal
         @auth {
           header Authorization "Bearer {env.VLLM_API_KEY}"
         }
@@ -26,6 +28,8 @@ write_files:
         }
         respond 401
       }
+      EOF
+      systemctl restart caddy
 
   - path: /opt/vllm/start.sh
     permissions: "0755"
@@ -71,6 +75,7 @@ runcmd:
   - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | tee /etc/apt/sources.list.d/caddy-stable.list
   - apt-get update -qq
   - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq caddy
+  - /opt/vllm/setup-caddy.sh
   - systemctl daemon-reload
   - systemctl enable caddy
   - systemctl start caddy

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Annotated
 
+import httpx
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
@@ -84,11 +85,14 @@ Be concise — 2-3 sentences per recommendation. Mention the speaker name and wh
 
 
 def create_agent():
+    base_url = os.environ["OPENAI_BASE_URL"]
+    http_client = httpx.Client(verify=False) if base_url.startswith("https://") else None
     llm = ChatOpenAI(
-        base_url=os.environ["OPENAI_BASE_URL"],
+        base_url=base_url,
         api_key=os.environ.get("OPENAI_API_KEY", "not-needed"),
         model=os.environ.get("MODEL_NAME", "Salesforce/xLAM-2-32b-fc-r"),
         temperature=1.0,
+        http_client=http_client,
     )
     tools = [search_talks, recommend_talks, find_related]
     return create_react_agent(llm, tools, prompt=SYSTEM_PROMPT)
