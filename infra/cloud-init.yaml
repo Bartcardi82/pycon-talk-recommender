@@ -1,0 +1,75 @@
+#cloud-config
+package_update: true
+packages:
+  - python3-pip
+  - python3-venv
+  - git
+  - curl
+  - caddy
+
+write_files:
+  - path: /etc/caddy/Caddyfile
+    content: |
+      :443 {
+        tls internal
+        @auth {
+          header Authorization "Bearer {env.VLLM_API_KEY}"
+        }
+        handle @auth {
+          reverse_proxy localhost:8000
+        }
+        respond 401
+      }
+
+  - path: /opt/vllm/start.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      set -e
+
+      # Install vLLM
+      pip install "vllm>=0.6.5"
+
+      # Download xLAM tool parser plugin
+      wget -O /opt/vllm/xlam_tool_call_parser.py \
+        https://huggingface.co/Salesforce/xLAM-2-1b-fc-r/raw/main/xlam_tool_call_parser.py
+
+      # Start vLLM with xLAM 2 32B
+      vllm serve Salesforce/xLAM-2-32b-fc-r \
+        --enable-auto-tool-choice \
+        --tool-parser-plugin /opt/vllm/xlam_tool_call_parser.py \
+        --tool-call-parser xlam \
+        --tensor-parallel-size 1 \
+        --max-model-len 32768 \
+        --gpu-memory-utilization 0.90 \
+        --host 0.0.0.0 \
+        --port 8000
+
+  - path: /etc/systemd/system/vllm.service
+    content: |
+      [Unit]
+      Description=vLLM Inference Server
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/opt/vllm/start.sh
+      Restart=on-failure
+      RestartSec=10
+      Environment="HUGGING_FACE_HUB_TOKEN=${huggingface_token}"
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/systemd/system/caddy.service.d/override.conf
+    content: |
+      [Service]
+      Environment="VLLM_API_KEY=${api_key}"
+
+runcmd:
+  - mkdir -p /opt/vllm
+  - systemctl daemon-reload
+  - systemctl enable caddy
+  - systemctl start caddy
+  - systemctl enable vllm
+  - systemctl start vllm

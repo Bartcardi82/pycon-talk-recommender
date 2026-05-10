@@ -1,0 +1,13 @@
+openstack_project_name = "your-project-name"
+openstack_user_name    = "your-email@example.com"
+openstack_password     = "your-password"
+ssh_key_name           = "your-ssh-key"
+api_key                = "choose-a-strong-api-key"
+huggingface_token      = "hf_your_token"
+cidr_whitelist         = "your.ip.address.here/32"
+
+# A100 (80GB, €2.21/hr) — safest for 32B model
+vm_flavor = "eg1.a100x1.V12-84"
+
+# A30 (24GB, €0.83/hr) — works with AWQ quantized model, tighter on memory
+# vm_flavor = "eg1.a30x1.V8-32"
