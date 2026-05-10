@@ -74,5 +74,5 @@ output "vm_ip" {
 }
 
 output "vllm_endpoint" {
-  value = "https://${openstack_compute_instance_v2.vllm.access_ip_v4}/v1"
+  value = "http://${openstack_compute_instance_v2.vllm.access_ip_v4}:443/v1"
 }
