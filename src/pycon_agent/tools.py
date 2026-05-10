@@ -53,6 +53,11 @@ def recommend_talks(profile: str, talks: list[Talk]) -> list[dict]:
 
 def find_related(talk_title: str, talks: list[Talk]) -> list[dict]:
     """Find talks related to a given talk by track and keyword overlap."""
+    stop_words = {
+        "the", "a", "an", "of", "in", "for", "and", "or", "to", "with",
+        "from", "on", "is", "how", "your", "by", "i", "my", "at", "about",
+    }
+
     target = None
     for talk in talks:
         if talk.title.lower() == talk_title.lower():
@@ -66,16 +71,23 @@ def find_related(talk_title: str, talks: list[Talk]) -> list[dict]:
                 break
 
     if target is None:
+        query_words = set(talk_title.lower().split()) - stop_words
+        best_score, best_talk = 0, None
+        for talk in talks:
+            searchable = talk.title.lower() + " " + (talk.track or "").lower()
+            matches = sum(1 for w in query_words if w in searchable)
+            if matches > best_score:
+                best_score, best_talk = matches, talk
+        if best_score >= 2:
+            target = best_talk
+
+    if target is None:
         return []
 
-    title_words = set(target.title.lower().split()) - {
-        "the", "a", "an", "of", "in", "for", "and", "or", "to", "with", "from", "on", "is", "how", "your", "by",
-    }
+    title_words = set(target.title.lower().split()) - stop_words
     abstract_words = set()
     if target.abstract:
-        abstract_words = set(target.abstract.lower().split()[:50]) - {
-            "the", "a", "an", "of", "in", "for", "and", "or", "to", "with", "from", "on", "is", "it", "that", "this",
-        }
+        abstract_words = set(target.abstract.lower().split()[:50]) - stop_words
 
     key_words = title_words | abstract_words
 
@@ -85,15 +97,19 @@ def find_related(talk_title: str, talks: list[Talk]) -> list[dict]:
             continue
 
         score = 0.0
-        if talk.track and target.track and talk.track == target.track:
-            score += 3.0
 
-        talk_words = set(talk.title.lower().split())
+        talk_title_words = set(talk.title.lower().split())
+        title_overlap = len(title_words & talk_title_words)
+        score += title_overlap * 3.0
+
+        talk_abstract_words = set()
         if talk.abstract:
-            talk_words |= set(talk.abstract.lower().split()[:50])
+            talk_abstract_words = set(talk.abstract.lower().split()[:80])
+        abstract_overlap = len(key_words & talk_abstract_words)
+        score += abstract_overlap * 1.0
 
-        overlap = len(key_words & talk_words)
-        score += overlap * 0.5
+        if talk.track and target.track and talk.track == target.track:
+            score += 1.0
 
         if score > 0:
             scored.append((score, talk))
