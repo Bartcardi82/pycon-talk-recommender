@@ -12,6 +12,9 @@ dependencies = [
     "rich>=13.0",
 ]
 
+[project.scripts]
+pycon-agent = "pycon_agent.agent:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
