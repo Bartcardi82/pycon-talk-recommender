@@ -118,11 +118,22 @@ def main():
         if question.strip().lower() in ("quit", "exit", "q"):
             break
 
+        import time
+
+        start = time.time()
         console.print()
         response = agent.invoke({"messages": [("human", question)]})
+        elapsed = time.time() - start
+
+        for msg in response["messages"]:
+            if hasattr(msg, "tool_calls") and msg.tool_calls:
+                for tc in msg.tool_calls:
+                    console.print(f"  [dim]→ tool: [bold]{tc['name']}[/bold]({tc['args']})[/dim]")
+
+        console.print()
         last_message = response["messages"][-1]
         console.print(Markdown(last_message.content))
-        console.print()
+        console.print(f"\n[dim]⏱ {elapsed:.1f}s[/dim]\n")
 
 
 if __name__ == "__main__":
