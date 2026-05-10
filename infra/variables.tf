@@ -47,6 +47,12 @@ variable "huggingface_token" {
   sensitive   = true
 }
 
+variable "root_volume_size" {
+  description = "Root volume size in GB (needs ~200 for vLLM + 32B model)"
+  type        = number
+  default     = 200
+}
+
 variable "cidr_whitelist" {
   description = "CIDR block allowed to access the VM"
   type        = string

@@ -46,10 +46,18 @@ data "openstack_images_image_v2" "ubuntu" {
 
 resource "openstack_compute_instance_v2" "vllm" {
   name            = "vllm-xlam2-demo"
-  image_id        = data.openstack_images_image_v2.ubuntu.id
   flavor_name     = var.vm_flavor
   key_pair        = var.ssh_key_name
   security_groups = [openstack_networking_secgroup_v2.vllm.name]
+
+  block_device {
+    uuid                  = data.openstack_images_image_v2.ubuntu.id
+    source_type           = "image"
+    destination_type      = "volume"
+    volume_size           = var.root_volume_size
+    boot_index            = 0
+    delete_on_termination = true
+  }
 
   user_data = templatefile("${path.module}/cloud-init.yaml", {
     api_key           = var.api_key
@@ -61,19 +69,10 @@ resource "openstack_compute_instance_v2" "vllm" {
   }
 }
 
-resource "openstack_networking_floatingip_v2" "vllm" {
-  pool = "external"
-}
-
-resource "openstack_networking_floatingip_associate_v2" "vllm" {
-  floating_ip = openstack_networking_floatingip_v2.vllm.address
-  port_id     = openstack_compute_instance_v2.vllm.network[0].port
-}
-
 output "vm_ip" {
-  value = openstack_networking_floatingip_v2.vllm.address
+  value = openstack_compute_instance_v2.vllm.access_ip_v4
 }
 
 output "vllm_endpoint" {
-  value = "https://${openstack_networking_floatingip_v2.vllm.address}/v1"
+  value = "https://${openstack_compute_instance_v2.vllm.access_ip_v4}/v1"
 }
